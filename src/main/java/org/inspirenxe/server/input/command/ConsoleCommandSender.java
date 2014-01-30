@@ -26,13 +26,13 @@ package org.inspirenxe.server.input.command;
 import java.util.Collections;
 import java.util.Set;
 
+import org.inspirenxe.server.Game;
+
 import com.flowpowered.chat.ChatReceiver;
-import com.flowpowered.commands.CommandArguments;
 import com.flowpowered.commands.CommandException;
 import com.flowpowered.commands.CommandManager;
 import com.flowpowered.commands.CommandSender;
 import com.flowpowered.permissions.PermissionDomain;
-import org.inspirenxe.server.Game;
 
 public class ConsoleCommandSender implements CommandSender {
     private final Game game;
@@ -45,7 +45,7 @@ public class ConsoleCommandSender implements CommandSender {
 
     @Override
     public void processCommand(String commandLine) throws CommandException {
-        this.manager.getRootCommand().execute(this, new CommandArguments(commandLine.split(" ")));
+        this.manager.executeCommand(this, commandLine);
     }
 
     @Override

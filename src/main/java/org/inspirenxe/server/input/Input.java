@@ -27,16 +27,20 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import jline.console.ConsoleReader;
+
+import org.inspirenxe.server.Game;
+import org.inspirenxe.server.input.command.Commands;
+import org.inspirenxe.server.input.command.ConsoleCommandSender;
+
+import com.github.wolf480pl.jline_log4j2_appender.ConsoleSetupMessage;
+
 import com.flowpowered.commands.CommandException;
 import com.flowpowered.commands.CommandManager;
 import com.flowpowered.commands.CommandProvider;
 import com.flowpowered.commands.annotated.AnnotatedCommandExecutorFactory;
+import com.flowpowered.commands.exception.UserFriendlyCommandException;
 import com.flowpowered.commons.ticking.TickingElement;
-import com.github.wolf480pl.jline_log4j2_appender.ConsoleSetupMessage;
-import jline.console.ConsoleReader;
-import org.inspirenxe.server.Game;
-import org.inspirenxe.server.input.command.Commands;
-import org.inspirenxe.server.input.command.ConsoleCommandSender;
 
 public class Input extends TickingElement {
     private static final ConsoleReaderThread readerThread = new ConsoleReaderThread();
@@ -56,7 +60,11 @@ public class Input extends TickingElement {
         };
         manager.setRootCommand(manager.getCommand(provider, "root"));
         sender = new ConsoleCommandSender(game, manager);
-        new AnnotatedCommandExecutorFactory(manager, provider).create(new Commands(game));
+        AnnotatedCommandExecutorFactory factory = new AnnotatedCommandExecutorFactory(manager, provider);
+        Commands cmds = new Commands(game);
+        factory.create(cmds);
+        factory.create(cmds.new WhitelistCommands(), manager.getCommand(provider, "whitelist"));
+
     }
 
     @Override
@@ -79,6 +87,8 @@ public class Input extends TickingElement {
             final String command = iterator.next();
             try {
                 sender.processCommand(command);
+            } catch (UserFriendlyCommandException e) {
+                sender.sendMessage(e.getLocalizedMessage());
             } catch (CommandException e) {
                 game.getLogger().error("Exception caught processing command [" + command + "]", e);
             }

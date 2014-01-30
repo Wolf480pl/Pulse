@@ -25,13 +25,14 @@ package org.inspirenxe.server.input.command;
 
 import java.io.IOException;
 
+import org.inspirenxe.server.Game;
+import org.inspirenxe.server.network.Access;
+
 import com.flowpowered.commands.CommandArguments;
 import com.flowpowered.commands.CommandException;
 import com.flowpowered.commands.CommandSender;
 import com.flowpowered.commands.annotated.CommandDescription;
 import com.flowpowered.commands.annotated.Permissible;
-import org.inspirenxe.server.Game;
-import org.inspirenxe.server.network.Access;
 
 public class Commands {
     private final Game game;
@@ -115,57 +116,69 @@ public class Commands {
         sender.sendMessage("Running version " + game.getVersion());
     }
 
-    @CommandDescription (name = "whitelist", usage = "whitelist <argument>", desc = "Manages the whitelist", help = "Use this command to manage the whitelist.")
-    @Permissible ("game.command.whitelist")
-    private void onCommandWhitelist(CommandSender sender, CommandArguments args) throws CommandException {
-        if (args.remaining() < 1) {
-            sender.sendMessage("Invalid arguments.");
-            return;
+    @CommandDescription(name = "whitelist", usage = "whitelist <subcommand>", desc = "Manages the whitelist", help = "Use this command to manage the whitelist.")
+    @Permissible("game.command.whitelist")
+    private boolean onCommandWhitelist(CommandSender sender, CommandArguments args) throws CommandException {
+        return false;
+    }
+    
+    public class WhitelistCommands {
+        
+        @CommandDescription(name = "whitelist.add", usage = "whitelist add <name>", desc = "Adds a player to the whitelist", help = "Use this command to add players to the whitelist.")
+        private boolean add(CommandSender sender, CommandArguments args) throws CommandException {
+            final Access access = game.getNetwork().getAccess();
+            final String name = args.popString("name");
+            if (access.whitelist(name, true)) {
+                sender.sendMessage(name + " was temporarily added to the whitelist.");
+            } else {
+                sender.sendMessage(name + " is already on the whitelist.");
+            }
+            return true;
         }
-        final Access access = game.getNetwork().getAccess();
-        switch (args.popString("ARGUMENT").toUpperCase()) {
-            case "ADD":
-                if (args.remaining() < 1) {
-                    sender.sendMessage("Usage: whitelist add <name>");
-                    return;
-                }
-                final String addedName = args.popString("NAME");
-                if (access.whitelist(addedName, true)) {
-                    sender.sendMessage(addedName + " was temporarily added to the whitelist.");
-                } else {
-                    sender.sendMessage(addedName + " is already on the whitelist.");
-                }
-                break;
-            case "LIST":
-                sender.sendMessage("Current whitelist: " + access.getWhitelist().toString().replace("[", "").replace("]", ""));
-                break;
-            case "OFF":
-                access.setWhitelistEnabled(false);
-                sender.sendMessage("Whitelist has been temporarily turned off.");
-                break;
-            case "ON":
-                access.setWhitelistEnabled(true);
-                sender.sendMessage("Whitelist has been temporarily turned on.");
-                break;
-            case "REMOVE":
-                if (args.remaining() < 1) {
-                    sender.sendMessage("Usage: whitelist remove <name>");
-                    return;
-                }
-                final String removedName = args.popString("NAME");
-                if (access.whitelist(removedName, false)) {
-                    sender.sendMessage(removedName + " was temporarily removed from the whitelist.");
-                } else {
-                    sender.sendMessage(removedName + " was not on the whitelist.");
-                }
-                break;
-            case "SAVE":
-                access.save();
-                sender.sendMessage("All temporary whitelist settings have been saved.");
-                break;
-            default:
-                sender.sendMessage("Invalid arguments.");
+        
+        @CommandDescription(name = "whitelist.list", usage = "whitelist list <name>", desc = "Lists the whitelist", help = "Use this command to look at the whitelist.")
+        private boolean list(CommandSender sender, CommandArguments args) throws CommandException {
+            final Access access = game.getNetwork().getAccess();
+            sender.sendMessage("Current whitelist: " + access.getWhitelist().toString().replace("[", "").replace("]", ""));
+            return true;
         }
+        
+        @CommandDescription(name = "whitelist.off", usage = "whitelist off", desc = "Turns off the whitelist", help = "Use this command to turn the whitelist off.")
+        private boolean off(CommandSender sender, CommandArguments args) throws CommandException {
+            final Access access = game.getNetwork().getAccess();
+            access.setWhitelistEnabled(false);
+            sender.sendMessage("Whitelist has been temporarily turned off.");
+            return true;
+        }
+        
+        @CommandDescription(name = "whitelist.on", usage = "whitelist on", desc = "Turns on the whitelist", help = "Use this command to turn the whitelist on.")
+        private boolean on(CommandSender sender, CommandArguments args) throws CommandException {
+            final Access access = game.getNetwork().getAccess();
+            access.setWhitelistEnabled(true);
+            sender.sendMessage("Whitelist has been temporarily turned on.");
+            return true;
+        }
+        
+        @CommandDescription(name = "whitelist.remove", usage = "whitelist remove <name>", desc = "Removes a player from the whitelist", help = "Use this command to remove players from the whitelist.")
+        private boolean remove(CommandSender sender, CommandArguments args) throws CommandException {
+            final Access access = game.getNetwork().getAccess();
+            final String name = args.popString("name");
+            if (access.whitelist(name, false)) {
+                sender.sendMessage(name + " was temporarily removed from the whitelist.");
+            } else {
+                sender.sendMessage(name + " was not on the whitelist.");
+            }
+            return true;
+        }
+        
+        @CommandDescription(name = "whitelist.save", usage = "whitelist save", desc = "Saves the whitelist", help = "Use this command to save the whitelist.")
+        private boolean save(CommandSender sender, CommandArguments args) throws CommandException {
+            final Access access = game.getNetwork().getAccess();
+            access.save();
+            sender.sendMessage("All temporary whitelist settings have been saved.");
+            return true;
+        }
+
     }
 }
 
